@@ -1,252 +1,167 @@
-
-#install python najlepiej mniej niz 12 bo nie dia³a ale wiêcej niz 9 min 10
-
-#instalacja odpowiedniego pakietu pip do wersji pythona
-
-#!pip install opencv-python
-
-#(a jak niedzia³a to innych pip pakietów bo to zalezy od wersji pythona i pip jednam oze dzia³ac 2 nie)
-
-#w koñcu zaimportowanei pakietu co dzia³a ( jak 'import cv2' nie dia³a to ten zaleznie od wrsji pip i lokalizacji mozna uzyc 'from cv2 import cv2')
-
-#!pip install mediapipe
-
-#importowanie mediapipe jako mp dla skrótu
- 
-#!pip install requests
- 
-# !wget -q https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task
- 
 import time
-
 import requests
- 
-url = f'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task'  # Replace with the actual URL
-
-response = requests.get(url)
- 
-if response.status_code == 200:
-
-    mab = response.content
-
-else:
-
-    print(f"Failed to fetch the file. Status code: {response.status_code}")
-   
- 
 import sys
-
-sys.getsizeof(mab)
- 
-flag = 1
- 
-detectN='Fuck'
- 
-import mediapipe as mp
- 
-BaseOptions = mp.tasks.BaseOptions
-
-GestureRecognizer = mp.tasks.vision.GestureRecognizer
-
-GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
-
-GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
-
-VisionRunningMode = mp.tasks.vision.RunningMode
- 
-# Create a gesture recognizer instance with the live stream mode:
-
-def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
-
-    if result.gestures: 
-
-        global detectN 
-
-        detectN = result.gestures[0][0].category_name 
-
-        print('gesture recognition result: {}'.format(result.gestures))
-         
- 
-options = GestureRecognizerOptions(
-
-    base_options=BaseOptions(model_asset_buffer=mab),
-
-    running_mode=VisionRunningMode.LIVE_STREAM,
-
-    result_callback=print_result)
- 
- 
-import mediapipe as mp
- 
-BaseOptions = mp.tasks.BaseOptions
-
-GestureRecognizer = mp.tasks.vision.GestureRecognizer
-
-GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
-
-GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
-
-VisionRunningMode = mp.tasks.vision.RunningMode
- 
-# Create a gesture recognizer instance with the live stream mode:
-
-def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
-
-    if result.gestures: 
-
-        global detectN 
-
-        detectN = result.gestures[0][0].category_name 
-
-        print('gesture recognition result: {}'.format(result.gestures))
- 
-options = GestureRecognizerOptions(
-
-    base_options=BaseOptions(model_asset_buffer=mab),
-
-    running_mode=VisionRunningMode.LIVE_STREAM,
-
-    result_callback=print_result)
- 
-import math
-
-from turtle import position
-
 import cv2
-
 import mediapipe as mp
+import webbrowser
 
-import time
- 
+# Definiujemy sta³e do wyœwietlania tekstu na ekranie
+font = cv2.FONT_HERSHEY_SIMPLEX
+bottomLeftCornerOfText = (10, 40)
+fontScale = 1
+fontColor = (255, 0, 0)
+thickness = 2
+lineType = 2
 
+# Pobieranie modelu
+url = 'https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/latest/gesture_recognizer.task'
+response = requests.get(url)
+if response.status_code == 200:
+    model_asset_buffer = response.content
+else:
+    print(f"Failed to fetch the file. Status code: {response.status_code}")
+    sys.exit(1)
 
+# Inicjalizacja MediaPipe
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
+mp_image = mp.Image
+mp_image_format = mp.ImageFormat
 
+BaseOptions = mp.tasks.BaseOptions
+GestureRecognizer = mp.tasks.vision.GestureRecognizer
+GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
+GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
+VisionRunningMode = mp.tasks.vision.RunningMode
 
+# Zabezpieczenie przed wielokrotnym wykonywaniem tej samej akcji w krótkim czasie
+last_action_time = 0
+last_action_name = ''
 
+# Funkcja obs³uguj¹ca ró¿ne gesty
+def handle_gesture(gesture_name, num_fingers):
+    global last_action_time, last_action_name
+    current_time = time.time()
 
-#import pyautogui
+    # Sprawdzamy, czy up³ynê³o co najmniej 10 sekund od ostatniej akcji
+    if current_time - last_action_time < 10:
+        print("Zabezpieczenie: Poczekaj 10 sekund przed wykonaniem kolejnej akcji.")
+        return
 
-#protokol do mediapipe na wykrywanie gestow
+    # Sprawdzamy, czy ta sama akcja nie zosta³a wykonana dwukrotnie pod rz¹d
+    if gesture_name == last_action_name:
+        print("Zabezpieczenie: Ta sama akcja nie moze byc wykonana dwukrotnie pod rzad.")
+        return
 
-font                   = cv2.FONT_HERSHEY_SIMPLEX
+    # Wykonujemy akcjê
+    if gesture_name == 'thumb_up':
+        webbrowser.open('https://www.youtube.com')
+    elif gesture_name == 'peace':
+        webbrowser.open('https://www.google.com')
+    elif gesture_name == 'fist':
+        print("Detected fist gesture!")
+    elif gesture_name == 'okay':
+        print("Detected okay gesture!")
+    elif gesture_name == 'palm':
+        print("Detected palm gesture!")
+    elif gesture_name == 'one':
+        print("Detected one gesture!")
+    elif num_fingers == 2:
+        webbrowser.open('https://www.facebook.com')
+    elif num_fingers == 3:
+        webbrowser.open('https://www.twitter.com')
+    elif num_fingers == 4:
+        webbrowser.open('https://www.linkedin.com')
+    
+    else:
+        print(f"Unknown gesture: {gesture_name} with {num_fingers} fingers")
 
-bottomLeftCornerOfText = (10,40)
+    # Aktualizujemy czas ostatniej akcji
+    last_action_time = current_time
+    last_action_name = gesture_name
 
-fontScale              = 1
+# Funkcja do okreœlania liczby wyprostowanych palców
+def count_fingers(hand_landmarks):
+    finger_tips = [8, 12, 16, 20]  # Punkty koñcowe palców (indeks, œrodkowy, serdeczny, ma³y)
+    thumb_tip = 4  # Punkt koñcowy kciuka
+    count = 0
+    
+    if hand_landmarks.landmark[thumb_tip].x < hand_landmarks.landmark[2].x:  # Sprawdzenie kciuka dla prawej rêki
+        count += 1
+    
+    for tip in finger_tips:
+        if hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 2].y:  # Sprawdzenie wyprostowania palców
+            count += 1
+    
+    return max(count - 1, 0)  # Zmniejszamy liczbê palców o 1, jeœli jest wiêksza ni¿ 0
 
-fontColor              = (255,0,0)
+# Definiowanie funkcji zwrotnej dla rozpoznawania gestów
+detectN = 'None'
+num_fingers = 0
+def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
+    global detectN, num_fingers
+    if result.gestures:
+        detectN = result.gestures[0][0].category_name
+        print('gesture recognition result:', result.gestures)
+        handle_gesture(detectN, num_fingers)
 
-thickness              = 2
+# Tworzenie instancji rozpoznawania gestów
+options = GestureRecognizerOptions(
+    base_options=BaseOptions(model_asset_buffer=model_asset_buffer),
+    running_mode=VisionRunningMode.LIVE_STREAM,
+    result_callback=print_result
+)
+recognizer = GestureRecognizer.create_from_options(options)
 
-lineType               = 2
- 
- 
+# Inicjalizacja kamery
+webcam = cv2.VideoCapture(0)
 
+# Inicjalizacja œledzenia r¹k
+hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.7, min_tracking_confidence=0.5)
 
-#to 0 oznacza kamerke gdzie 0 to wbudowana a 1,2,3 itd.. to extencion webcams
-
-webcam=cv2.VideoCapture(0)
-
-mp_hands=mp.solutions.hands
-
-mp_drawing=mp.solutions.drawing_utils
- 
-
-
-#definijuemy za³¹czenie siê kamery oraz komendy to zwolnienia kamerki dla innych prgramow bo x nie dzia³a trzeba uzyæ r
-
+# G³ówna pêtla
 while True:
-     
-    ret, frame=webcam.read()
-    time.sleep(0.05)
+    ret, frame = webcam.read()
+    if not ret:
+        break
     
-
- 
-    if ret==True:
- 
-      image_width, image_height, ret = frame.shape
- 
-
-
-        #dodawanie hand traking do funkcji kamery camera czyta BGR a program RGB to tzreba skonwertowaæ a potem w 2 stronê
-
-    frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB) 
-
+    image_height, image_width, _ = frame.shape
     
-    #podobno naprawia porblem z ramem idk
-    with GestureRecognizer.create_from_options(options) as recognizer:
-            mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
-            recognizer.recognize_async(mp_image, 100)
+    # Konwertowanie obrazu z BGR na RGB
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    if flag==1:  
+    # Rozpoznawanie gestów
+    mp_frame = mp_image(image_format=mp_image_format.SRGB, data=frame_rgb)
+    recognizer.recognize_async(mp_frame, int(time.time() * 1000))
 
-        results=mp_hands.Hands(max_num_hands=2,min_detection_confidence=0.7,min_tracking_confidence=0.5).process(frame)
+    # Œledzenie r¹k
+    results = hands.process(frame_rgb)
 
-      # Convert RGB image to MediaPipe Image format
+    # Rysowanie punktów charakterystycznych na rêkach
+    if results.multi_hand_landmarks:
+        for hand_landmarks in results.multi_hand_landmarks:
+            mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+            num_fingers = count_fingers(hand_landmarks)
+            cv2.putText(frame, f'Fingers: {num_fingers}', (10, 70), font, fontScale, fontColor, thickness, lineType)
+            for id, landmark in enumerate(hand_landmarks.landmark):
+                
+                x = int(landmark.x * image_width)
+                y = int(landmark.y * image_height)
+                if id == 8:
+                    cv2.circle(frame, (x + 50, y - 100), 8, (0, 255, 255), 2)
+                if id == 4:
+                    cv2.circle(frame, (x + 50, y - 100), 8, (0, 0, 255), 2)
 
-    with GestureRecognizer.create_from_options(options) as recognizer:
+    # Wyœwietlanie wyników
+    cv2.putText(frame, detectN, bottomLeftCornerOfText, font, fontScale, fontColor, thickness, lineType)
+    cv2.imshow("CameraNTM", frame)
 
-           mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=frame)
+    key = cv2.waitKey(1)
+    if key == ord('r'):
+        break
 
-           recognizer.recognize_async(mp_image, 100)
-
-         # recognition_result = recognizer.recognize(mp_image)
-
-         # if recognition_result.gestures:
-
-            #if recognition_result.gestures[0][0].index>-1:
-
-          #      print(recognition_result.gestures[0][0].index);
-
-        #malowanie lini na palcach spowrotem do BGR zeby program czytal
-    
-
-    frame=cv2.cvtColor(frame,cv2.COLOR_RGB2BGR)
-
-    if flag==1:
-
-        if results.multi_hand_landmarks:
-
-            for hand_landmarks in results.multi_hand_landmarks:
-
-                mp_drawing.draw_landmarks(frame,hand_landmarks,connections=mp_hands.HAND_CONNECTIONS)
-
-                landmarks = hand_landmarks.landmark
-
-                for id, landmark in enumerate(landmarks):
-
-                    x = int(landmark.x * image_width)
-
-                    y = int(landmark.y *  image_height)
- 
-                    if id == 8:
-
-                        cv2.circle(img=frame,center=(x + 50,y - 100),radius=8,color=(0,255,255),thickness=2)
-
-                    if id == 4:
-
-                        cv2.circle(img=frame,center=(x + 50,y - 100),radius=8,color=(0,0,255),thickness=2)
-                        
-                       
-
-    cv2.putText(frame,detectN, bottomLeftCornerOfText, font, fontScale,fontColor,thickness,lineType)  
-
-#tu powyzej jest opcja definiowania jak ma wykrywac czyli jak bardzi musi byc widac ze to reka i jak wyraznie podaac za reka , oraz iel maxrak naraz moze czytac, tu mam lekki problem bo ja duzo rak naraz bedzie to wywala cos cos nie dzia³a
-
-    flag=1
-  
-    cv2.imshow("CameraNTM",frame)
-
-    key=cv2.waitKey(1) 
-    
-    
-    
-    if key==ord("r"):
-
-            break
-    
-
-
+# Zwolnienie zasobów
+hands.close()
+recognizer.close()
 webcam.release()
-
 cv2.destroyAllWindows()
