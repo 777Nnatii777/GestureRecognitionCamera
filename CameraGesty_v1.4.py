@@ -1,11 +1,11 @@
-import time
+ï»¿import time
 import requests
 import sys
 import cv2
 import mediapipe as mp
 import webbrowser
 
-# Definiujemy sta³e do wyœwietlania tekstu na ekranie
+# Definiujemy stale do wyswietlenia tekstu na ekranie
 font = cv2.FONT_HERSHEY_SIMPLEX
 bottomLeftCornerOfText = (10, 40)
 fontScale = 1
@@ -34,26 +34,26 @@ GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
 GestureRecognizerResult = mp.tasks.vision.GestureRecognizerResult
 VisionRunningMode = mp.tasks.vision.RunningMode
 
-# Zabezpieczenie przed wielokrotnym wykonywaniem tej samej akcji w krótkim czasie
+# Zabezpieczenie przed wielokrotnym wykonywaniem tej samej akcji w krÃ³tkim czasie
 last_action_time = 0
 last_action_name = ''
 
-# Funkcja obs³uguj¹ca ró¿ne gesty
+# Funkcja obslugujaca rÃ³zne gesty
 def handle_gesture(gesture_name, num_fingers):
     global last_action_time, last_action_name
     current_time = time.time()
 
-    # Sprawdzamy, czy up³ynê³o co najmniej 10 sekund od ostatniej akcji
+    # Sprawdzamy, czy uplynelo co najmniej 10 sekund od ostatniej akcji
     if current_time - last_action_time < 10:
         print("Zabezpieczenie: Poczekaj 10 sekund przed wykonaniem kolejnej akcji.")
         return
 
-    # Sprawdzamy, czy ta sama akcja nie zosta³a wykonana dwukrotnie pod rz¹d
+    # Sprawdzamy, czy ta sama akcja nie zostaÂ³a wykonana dwukrotnie pod rzad
     if gesture_name == last_action_name:
         print("Zabezpieczenie: Ta sama akcja nie moze byc wykonana dwukrotnie pod rzad.")
         return
 
-    # Wykonujemy akcjê
+    # Wykonujemy akcje
     if gesture_name == 'thumb_up':
         webbrowser.open('https://www.youtube.com')
     elif gesture_name == 'peace':
@@ -80,22 +80,22 @@ def handle_gesture(gesture_name, num_fingers):
     last_action_time = current_time
     last_action_name = gesture_name
 
-# Funkcja do okreœlania liczby wyprostowanych palców
+# Funkcja do okreÅ“lania liczby wyprostowanych palcÃ³w
 def count_fingers(hand_landmarks):
-    finger_tips = [8, 12, 16, 20]  # Punkty koñcowe palców (indeks, œrodkowy, serdeczny, ma³y)
-    thumb_tip = 4  # Punkt koñcowy kciuka
-    count = 0
-    
-    if hand_landmarks.landmark[thumb_tip].x < hand_landmarks.landmark[2].x:  # Sprawdzenie kciuka dla prawej rêki
-        count += 1
-    
-    for tip in finger_tips:
-        if hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 2].y:  # Sprawdzenie wyprostowania palców
-            count += 1
-    
-    return max(count - 1, 0)  # Zmniejszamy liczbê palców o 1, jeœli jest wiêksza ni¿ 0
+    finger_tips = [4, 8, 12, 16, 20]  # Indeksy punktÃ³w koÅ„cowych palcÃ³w
+    num_fingers = 0
 
-# Definiowanie funkcji zwrotnej dla rozpoznawania gestów
+    # Sprawdzanie kciuka
+    if hand_landmarks.landmark[3].y < hand_landmarks.landmark[2].y:
+        num_fingers += 1
+
+    # Sprawdzanie pozostaÅ‚ych palcÃ³w
+    for tip in finger_tips:
+        if hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 1].y and hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 2].y:
+            num_fingers += 1
+
+    return num_fingers - 2
+# Definiowanie funkcji zwrotnej dla rozpoznawania gestÃ³w
 detectN = 'None'
 num_fingers = 0
 def print_result(result: GestureRecognizerResult, output_image: mp.Image, timestamp_ms: int):
@@ -105,7 +105,7 @@ def print_result(result: GestureRecognizerResult, output_image: mp.Image, timest
         print('gesture recognition result:', result.gestures)
         handle_gesture(detectN, num_fingers)
 
-# Tworzenie instancji rozpoznawania gestów
+# Tworzenie instancji rozpoznawania gestÃ³w
 options = GestureRecognizerOptions(
     base_options=BaseOptions(model_asset_buffer=model_asset_buffer),
     running_mode=VisionRunningMode.LIVE_STREAM,
@@ -116,10 +116,10 @@ recognizer = GestureRecognizer.create_from_options(options)
 # Inicjalizacja kamery
 webcam = cv2.VideoCapture(0)
 
-# Inicjalizacja œledzenia r¹k
+# Inicjalizacja sledzenai rak
 hands = mp_hands.Hands(max_num_hands=2, min_detection_confidence=0.7, min_tracking_confidence=0.5)
 
-# G³ówna pêtla
+#Petla gÅ‚Ã³wna
 while True:
     ret, frame = webcam.read()
     if not ret:
@@ -130,21 +130,19 @@ while True:
     # Konwertowanie obrazu z BGR na RGB
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    # Rozpoznawanie gestów
+    # Rozpoznawanie gestÃ³w
     mp_frame = mp_image(image_format=mp_image_format.SRGB, data=frame_rgb)
     recognizer.recognize_async(mp_frame, int(time.time() * 1000))
 
-    # Œledzenie r¹k
+    # sledzenie rak
     results = hands.process(frame_rgb)
 
-    # Rysowanie punktów charakterystycznych na rêkach
+    # Rysowanie punktÃ³w charakterystycznych na rekach
     if results.multi_hand_landmarks:
         for hand_landmarks in results.multi_hand_landmarks:
             mp_drawing.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
             num_fingers = count_fingers(hand_landmarks)
-            cv2.putText(frame, f'Fingers: {num_fingers}', (10, 70), font, fontScale, fontColor, thickness, lineType)
             for id, landmark in enumerate(hand_landmarks.landmark):
-                
                 x = int(landmark.x * image_width)
                 y = int(landmark.y * image_height)
                 if id == 8:
@@ -152,16 +150,12 @@ while True:
                 if id == 4:
                     cv2.circle(frame, (x + 50, y - 100), 8, (0, 0, 255), 2)
 
-    # Wyœwietlanie wyników
+    # WyÅ›wietanie wyniku
+    if detectN == 'None' and num_fingers in [3, 4]:
+        cv2.putText(frame, f'Fingers: {num_fingers}', (10, 70), font, fontScale, fontColor, thickness, lineType)
     cv2.putText(frame, detectN, bottomLeftCornerOfText, font, fontScale, fontColor, thickness, lineType)
     cv2.imshow("CameraNTM", frame)
 
     key = cv2.waitKey(1)
     if key == ord('r'):
         break
-
-# Zwolnienie zasobów
-hands.close()
-recognizer.close()
-webcam.release()
-cv2.destroyAllWindows()
