@@ -55,9 +55,9 @@ def handle_gesture(gesture_name, num_fingers):
 
     # Wykonujemy akcje
     if gesture_name == 'thumb_up':
-        webbrowser.open('https://www.youtube.com')
+        webbrowser.open("Detected Vistory!")
     elif gesture_name == 'peace':
-        webbrowser.open('https://www.google.com')
+        webbrowser.open("Detected pease")
     elif gesture_name == 'fist':
         print("Detected fist gesture!")
     elif gesture_name == 'okay':
@@ -67,9 +67,9 @@ def handle_gesture(gesture_name, num_fingers):
     elif gesture_name == 'one':
         print("Detected one gesture!")
     elif num_fingers == 2:
-        webbrowser.open('https://www.facebook.com')
+        print("Detected two !")
     elif num_fingers == 3:
-        webbrowser.open('https://www.twitter.com')
+        webbrowser.open('https://www.youtube.com')
     elif num_fingers == 4:
         webbrowser.open('https://www.linkedin.com')
     
